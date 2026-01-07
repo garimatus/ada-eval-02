@@ -1,28 +1,22 @@
-#ifndef ESTRUCTURAS_H
-#define ESTRUCTURAS_H
+#ifndef ADA_EVAL_02_STRUCTS_H
+#define ADA_EVAL_02_STRUCTS_H
 
-#include <iostream>
-#include <string>
-
-
-typedef struct carrera{
-	const char* nombre;
-	int codigo;
-	float ponderaciones[5];
-	int vacantes;
-	double primero;
-	double ultimo;
-	int** mechones;
-	bool disponibilidad;
+struct Carrera {
+  const char *Nombre;
+  int Codigo;
+  float Ponderaciones[5];
+  int Vacantes;
+  double Primero;
+  double Ultimo;
+  int **Mechones;
+  bool Disponibilidad;
 };
 
-typedef struct universidad{
-	const char* nombre;
-	carrera* oferta;
-	int carreras;
-	bool disponibilidad;
+struct OfertaUniversitaria {
+  const char *Name;
+  Carrera *Oferta;
+  int CantidadCarreras;
+  bool DisponibilidadCupos;
 };
 
-
-#endif /* ESTRUCTURAS_H */
-
+#endif /* ADA_EVAL_02_STRUCTS_H */

@@ -2,120 +2,108 @@
 #include <cstdlib>
 #include <fstream>
 #include <chrono>
+#include <filesystem>
 #include "funciones.h"
 
+int main(int argc, char **argv) {
+    if (argc < 3) {
+        std::cerr << "\nNo hay argumentos suficientes para la ejecución." << std::endl;
+        displaySubjectInfo();
+        return EXIT_FAILURE;
+    }
 
-using namespace std;
+    std::string option = argv[1];
 
+    if (option != "1" && option != "2") {
+        std::cerr << "\nNo se reconoce la opción '" << option << "'." << std::endl;
+        displaySubjectInfo();
+        return EXIT_FAILURE;
+    }
 
-int main(int argc, char** argv){
-	
-	int** ponderados, lineas;
-	
-	if (argc > 3)
-	{
-		if(std::string(argv[1]) == "1" || std::string(argv[1]) == "2")
-		{
-			std::string archivo(argv[2]);
-			std::string ruta(argv[3]);
-
-			if((std::string) argv[1] == "1")
-			{
-				if(archivo.length() >= 12)
-				{
-					std::ifstream lectura;
-					lectura.open(archivo, std::ios_base::in);
-				
-					std::string nombre = archivo.substr(archivo.length()-12,12);
-				
-					if(lectura && nombre == "puntajes.csv")
-					{
-						auto inicio = chrono::steady_clock::now();
-					
-						std::cout << "\nArchivo encontrado." << std::endl;
-			
-						lineas = contar(lectura);
-						lectura.close();
-			
-						if(lineas)
-						{
-							lectura.open(archivo, std::ios_base::in);
-				
-							ponderados = new int*[lineas];
-				
-							universidad utem = ponderar(ponderados, lectura);
-							lectura.close();
-				
-							heapSort(ponderados, lineas, 6);
-				
-							postular(utem, ponderados, lineas);
-				
-							escribir(utem, ruta);
-				
-							auto fin = chrono::steady_clock::now();
-						
-							std::cout << "\nArchivos de texto creados en ."+ruta << std::endl;
-				
-							auto tiempo = chrono::duration_cast<chrono::nanoseconds>(fin - inicio).count();
-				
-							std::cout << "\nSe demoró "<< tiempo*(0.000000001) <<"[segs] ordenar y postular a los " << lineas << " estudiantes." << std::endl;
-						}
-						else
-						{
-							std::cout << "\nEl archivo esta vacío." << std::endl;
-					
-							return EXIT_FAILURE;
-						}
-					}
-					else
-					{
-						std::cout << "\nEl archivo o la ruta especificada no existen" << std::endl;
-					
-						return EXIT_FAILURE;
-					}
-				}
-				else
-				{
-					std::cout << "\nEl archivo en la ruta especificada no existe." << std::endl;
-				
-					return EXIT_FAILURE;
-				}
-			}
-			
-			if((std::string) argv[1] == "2")
-			{
-				auto inicio = chrono::steady_clock::now();
-			
-				std::string ruta(argv[3]);
-				std::string rut(argv[2]);
-			
-				std::string mensaje = buscar(ruta, rut);
-			
-				auto fin = chrono::steady_clock::now();
-				auto tiempo = chrono::duration_cast<chrono::nanoseconds>(fin - inicio).count();
-			
-				std::cout << mensaje << std::endl;
-				std::cout << "La busqueda demoró "<< tiempo*(0.000000001) <<"[segs]." << std::endl;
-			}
-		}
-		else
-        {
-            std::cout << "\nNo se reconoce el argumento '" << argv[1] << "'." << std::endl;
-			
-			participantes();
-			
-			return EXIT_FAILURE;
+    if (option == "1") {
+        if (!argv[3]) {
+            argv[3] = const_cast<char*>("./");
         }
-    }
-    else
-    {
-        std::cout << "\nNo hay argumentos suficientes para la ejecución." << std::endl;
-        
-		participantes();
-		
-		return EXIT_FAILURE;
-    }
-	
-	return EXIT_SUCCESS;
-}
 
+        int **ponderados;
+
+        std::string InputFilePath(argv[2]);
+        std::string OutputFilePath(argv[3]);
+        std::error_code PathStatusErrorCode;
+        std::filesystem::file_status PathStatus = std::filesystem::status(
+                    std::filesystem::path(OutputFilePath), PathStatusErrorCode);
+
+        if (PathStatusErrorCode) {
+            std::cerr << "Error checking path status: " << PathStatusErrorCode.message() << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        if (!std::filesystem::exists(PathStatus)) {
+            std::cerr << "\nDirectorio de escritura no existe." << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        if (InputFilePath.length() < 4) {
+            std::cerr << "\nArchivo de lectura inválido." << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        std::string FileExtension = InputFilePath.substr(InputFilePath.length() - 4, InputFilePath.length());
+
+        if (FileExtension != ".csv") {
+            std::cerr << "\nExtensión de archivo incorrecto." << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        std::ifstream read;
+        read.open(InputFilePath, std::ios_base::in);
+
+        if (!read.is_open()) {
+            std::cerr << "\nArchivo no encontrado." << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        std::cout << "\nArchivo encontrado." << std::endl;
+        const int newLinesCount = countFileNewLines(read);
+
+        if (!newLinesCount) {
+            std::cerr << "\nEl archivo está vacío." << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        read.open(FileExtension, std::ios_base::in);
+        ponderados = new int *[newLinesCount];
+        OfertaUniversitaria Utem = getAcademicOffer(ponderados, read);
+        read.close();
+        auto StartTime = std::chrono::steady_clock::now();
+        heapSort(ponderados, newLinesCount, 6);
+        auto FinishTime = std::chrono::steady_clock::now();
+        postulate(Utem, ponderados, newLinesCount);
+        write(Utem, OutputFilePath);
+
+        std::cout << "\nArchivos de texto creados en " + OutputFilePath
+                << std::endl;
+
+        auto HeapSortTime =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(FinishTime - StartTime)
+                .count();
+
+        std::cout << "\nSe demoró " << static_cast<double>(HeapSortTime) * (0.000000001)
+                << "[segs] ordenar y postular a los " << newLinesCount
+                << " estudiantes." << std::endl;
+    }
+
+    if (option == "2") {
+        std::string ruta(argv[3]);
+        std::string rut(argv[2]);
+        auto StartTime = std::chrono::steady_clock::now();
+        std::string SearchResultMessage = search(ruta, rut);
+        auto FinishTime = std::chrono::steady_clock::now();
+        auto SearchTime =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(FinishTime - StartTime).count();
+        std::cout << SearchResultMessage << std::endl;
+        std::cout << "La búsqueda demoró " << static_cast<double>(SearchTime) * (0.000000001)
+                << "[segundos]." << std::endl;
+    }
+    return EXIT_SUCCESS;
+}

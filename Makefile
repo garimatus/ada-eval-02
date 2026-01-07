@@ -48,21 +48,21 @@
 MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
+CXX = clang++
+CXXFLAGS = -std=c++23 -Wall
 
-
-
-evaluacion02: directorios main.o funciones.o
-	g++ build/main.o build/funciones.o -o dist/evaluacion02
+ada-eval-02: dirs main.o funciones.o
+	${CXX} ${CXXFLAGS} build/main.o build/funciones.o -o dist/ada-eval-02
 	rm -fr build/*.o build
 
-directorios:
-	mkdir -p build dist
+dirs:
+	${MKDIR} -p build dist
 	
 main.o: main.cpp
-	g++ -c main.cpp -o build/main.o
+	${CXX} ${CXXFLAGS} -c main.cpp -o build/main.o
 	
 funciones.o: funciones.cpp funciones.h
-	g++ -c funciones.cpp -o build/funciones.o
+	${CXX} ${CXXFLAGS} -c funciones.cpp -o build/funciones.o
 
 # build
 build: .build-post
@@ -132,10 +132,3 @@ help: .help-post
 
 .help-post: .help-impl
 # Add your post 'help' code here...
-
-
-# include project implementation makefile
-include nbproject/Makefile-impl.mk
-
-# include project make variables
-include nbproject/Makefile-variables.mk
