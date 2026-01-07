@@ -73,13 +73,13 @@ int main(int argc, char **argv) {
 
         read.open(FileExtension, std::ios_base::in);
         ponderados = new int *[newLinesCount];
-        OfertaUniversitaria Utem = getAcademicOffer(ponderados, read);
+        OfertaUniversitaria OfertaUtem = getAcademicOffer(ponderados, read);
         read.close();
         auto StartTime = std::chrono::steady_clock::now();
         heapSort(ponderados, newLinesCount, 6);
         auto FinishTime = std::chrono::steady_clock::now();
-        postulate(Utem, ponderados, newLinesCount);
-        write(Utem, OutputFilePath);
+        postulate(OfertaUtem, ponderados, newLinesCount);
+        write(OfertaUtem, OutputFilePath);
 
         std::cout << "\nArchivos de texto creados en " + OutputFilePath
                 << std::endl;
