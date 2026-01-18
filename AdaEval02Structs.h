@@ -13,7 +13,7 @@ struct Carrera {
 };
 
 struct OfertaUniversitaria {
-  const char *Name;
+  const char *Nombre;
   Carrera *Oferta;
   int CantidadCarreras;
   bool DisponibilidadCupos;

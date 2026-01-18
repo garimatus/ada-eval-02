@@ -3,7 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <filesystem>
-#include "funciones.h"
+#include "include.h"
 
 int main(int argc, char **argv) {
     if (argc < 3) {
@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
             argv[3] = const_cast<char *>("./");
         }
 
-        int **WeightedScores;
+        int **Scores;
 
         std::string InputFilePath(argv[2]);
         std::string OutputFilePath(argv[3]);
@@ -73,14 +73,14 @@ int main(int argc, char **argv) {
             return EXIT_FAILURE;
         }
 
-        WeightedScores = new int *[FileLinesCounter];
+        Scores = new int *[FileLinesCounter];
         InputStream.open(InputFilePath, std::ios_base::in);
-        OfertaUniversitaria UtemOffer = getAcademicOffer(WeightedScores, InputStream);
+        OfertaUniversitaria UtemOffer = getAcademicOffer(Scores, InputStream);
         InputStream.close();
         auto StartHeapSortTime = std::chrono::steady_clock::now();
-        heapSort(WeightedScores, FileLinesCounter, 6);
+        heapSort(Scores, FileLinesCounter, 6);
         auto FinishHeapSortTime = std::chrono::steady_clock::now();
-        postulate(UtemOffer, WeightedScores, FileLinesCounter);
+        postulate(UtemOffer, Scores, FileLinesCounter);
         write(UtemOffer, OutputFilePath);
 
         std::cout << "\nArchivos de texto creados en " + OutputFilePath
@@ -98,11 +98,11 @@ int main(int argc, char **argv) {
     if (ArgvOption == "2") {
         std::string FilePath(argv[3]);
         std::string Rut(argv[2]);
-        auto StartTime = std::chrono::steady_clock::now();
+        auto StartSearchTime = std::chrono::steady_clock::now();
         std::string SearchResultMessage = search(FilePath, Rut);
-        auto FinishTime = std::chrono::steady_clock::now();
+        auto FinishSearchTime = std::chrono::steady_clock::now();
         auto SearchTime =
-                std::chrono::duration_cast<std::chrono::nanoseconds>(FinishTime - StartTime).count();
+                std::chrono::duration_cast<std::chrono::nanoseconds>(FinishSearchTime - StartSearchTime).count();
         std::cout << SearchResultMessage << std::endl;
         std::cout << "La búsqueda demoró " << static_cast<double>(SearchTime) * (0.000000001)
                 << "[segundos]." << std::endl;

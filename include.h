@@ -1,24 +1,26 @@
 #ifndef ADA_EVAL_02_FUNCIONES_H
 #define ADA_EVAL_02_FUNCIONES_H
 
-#include "estructuras.h"
+#include "AdaEval02Structs.h"
 #include "iostream"
 
 void displaySubjectInfo();
 
-int countFileNewLines(std::istream &);
+int countFileLines(std::istream &);
 
 int *getScores(std::string);
 
 OfertaUniversitaria getAcademicOffer(int **, std::istream &);
 
-void heapSort(int **, int, int);
-
 void postulate(OfertaUniversitaria, int **, int);
 
-void write(OfertaUniversitaria, std::string);
+void write(OfertaUniversitaria, const std::string&);
 
-std::string search(std::string, std::string);
+std::string search(const std::string&, const std::string&);
+
+void heapify(int **arr, const int n, const int i, const int index);
+
+void heapSort(int **arr, int n, int index);
 
 #endif /* ADA_EVAL_02_FUNCIONES_H */
 

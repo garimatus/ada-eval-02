@@ -1,8 +1,9 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include "estructuras.h"
+#include "AdaEval02Structs.h"
 // #include <omp.h>
+#include "heapSort.cpp"
 
 void displaySubjectInfo() {
     std::cout << std::endl << "=== Análisis de Algoritmos: Evaluación 02 ===" << std::endl;
@@ -13,36 +14,36 @@ void displaySubjectInfo() {
     std::cout << std::endl << "Daniela Galleguillos" << std::endl;
 }
 
-int countFileNewLines(std::istream &file) {
-    int LinesCount = 0;
-    for (std::string l; getline(file, l); LinesCount++) {
+int countFileLines(std::istream &File) {
+    int LinesCounter = 0;
+    for (std::string l; getline(File, l); LinesCounter++) {
     }
-    return LinesCount;
+    return LinesCounter;
 }
 
-int *getScores(const std::string& line) {
-    int *scores = new int[8], i = 0;
-    std::stringstream ss(line);
-    std::string item;
-    while (getline(ss, item, ';')) {
-        int Valor = atoi(item.c_str());
-        scores[i] = Valor;
+int *getScores(const std::string& Line) {
+    int *Scores = new int[8], i = 0;
+    std::stringstream SS(Line);
+    std::string Item;
+    while (getline(SS, Item, ';')) {
+        const int Numeric = atoi(Item.c_str());
+        Scores[i] = Numeric;
         i++;
     }
-    scores[6] = 0; // historia -> mejor ponderacion
-    scores[7] = 0; // <- código carrera
-    return scores;
+    Scores[6] = 0; // historia -> mejor ponderacion
+    Scores[7] = 0; // <- código carrera
+    return Scores;
 }
 
-double weighScoresByCareer(const int *scores, Carrera opcion) {
-    return static_cast<float>(scores[1]) * opcion.Ponderaciones[0] +
-           static_cast<float>(scores[2]) * opcion.Ponderaciones[1] +
-           static_cast<float>(scores[3]) * opcion.Ponderaciones[3] +
-           static_cast<float>(scores[4]) * opcion.Ponderaciones[2] +
-           static_cast<float>(scores[5]) * opcion.Ponderaciones[4];
+double weighScoresByCareer(const int *Scores, const Carrera &Option) {
+    return static_cast<float>(Scores[1]) * Option.Ponderaciones[0] +
+           static_cast<float>(Scores[2]) * Option.Ponderaciones[1] +
+           static_cast<float>(Scores[3]) * Option.Ponderaciones[3] +
+           static_cast<float>(Scores[4]) * Option.Ponderaciones[2] +
+           static_cast<float>(Scores[5]) * Option.Ponderaciones[4];
 }
 
-OfertaUniversitaria getAcademicOffer(int **ponderados, std::istream &archivo) {
+OfertaUniversitaria getAcademicOffer(int **Scores, std::istream &File) {
     OfertaUniversitaria AcademicOffer = {"Universidad Tecnológica Metropolitana (UTEM)", new Carrera[28], 28, true};
     AcademicOffer.Oferta[0] = {
         "Ing. en Biotecnologia", 21073, {0.15, 0.25, 0.20, 0.30, 0.10}, 60, 675.8, 540.9, new int *[60], true
@@ -115,14 +116,14 @@ OfertaUniversitaria getAcademicOffer(int **ponderados, std::istream &archivo) {
     AcademicOffer.Oferta[27] = {"Diseno Industrial", 21023, {0.10, 0.40, 0.30, 0.10, 0.10}, 65, 642.2, 439.9, new int *[65], true};
 
     int i = 0;
-    const int n = AcademicOffer.CantidadCarreras;
+    const int CareerCount = AcademicOffer.CantidadCarreras;
 
-    for (std::string linea; std::getline(archivo, linea); i++) {
-        double mejor = 0.0;
+    for (std::string Line; std::getline(File, Line); i++) {
+        double BestCaseWeighted = 0.0;
 
-        int *puntajes = getScores(linea);
+        int *Score = getScores(Line);
 
-        ponderados[i] = puntajes;
+        Scores[i] = Score;
 
         /*
          ***************** Def. Valores *****************
@@ -137,23 +138,25 @@ OfertaUniversitaria getAcademicOffer(int **ponderados, std::istream &archivo) {
             ponderados[i][7] = 0; <-> código carrera
         */
 
-        for (int j = 0; j < n; j++) {
-            if ((puntajes[3] + puntajes[4]) / (double) 2.0 >= 450.0) {
-                double ponderacion = weighScoresByCareer(puntajes, AcademicOffer.Oferta[j]);
+        for (int j = 0; j < CareerCount; j++) {
+            if ((Score[3] + Score[4]) / (double) 2.0 >= 450.0) {
+                const double Weighted = weighScoresByCareer(Score, AcademicOffer.Oferta[j]);
 
-                if (ponderados[i][0] == 17672369)
-                    std::cout << ponderacion << ";" << AcademicOffer.Oferta[j].Nombre << std::endl;
+                // ¿
+                //  if (Scores[i][0] == 17672369)
+                //  std::cout << ponderacion << ";" << AcademicOffer.Oferta[j].Nombre << std::endl;
+                // ?
 
-                if (ponderacion > AcademicOffer.Oferta[j].Ultimo && ponderacion > mejor) {
-                    mejor = ponderacion;
-                    ponderados[i][6] = static_cast<int>(round(ponderacion));
-                    ponderados[i][7] = AcademicOffer.Oferta[j].Codigo;
+                if (Weighted > AcademicOffer.Oferta[j].Ultimo && Weighted > BestCaseWeighted) {
+                    BestCaseWeighted = Weighted;
+                    Scores[i][6] = static_cast<int>(round(Weighted));
+                    Scores[i][7] = AcademicOffer.Oferta[j].Codigo;
                 }
             }
         }
     }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < CareerCount; i++) {
         for (int j = 0; j < AcademicOffer.Oferta[i].Vacantes; j++) {
             AcademicOffer.Oferta[i].Mechones[j] = new int[2];
             AcademicOffer.Oferta[i].Mechones[j][0] = 0;
@@ -163,195 +166,162 @@ OfertaUniversitaria getAcademicOffer(int **ponderados, std::istream &archivo) {
     return AcademicOffer;
 }
 
-void heapify(int **arr, int n, int i, int index) {
-    int smallest = i; // Initialize smallest as root
-    int l = 2 * i + 1; // left = 2*i + 1
-    int r = 2 * i + 2; // right = 2*i + 2
-    // If left child is smaller than root
-    if (l < n && arr[l][index] < arr[smallest][index])
-        smallest = l;
-    // If right child is smaller than smallest so far
-    if (r < n && arr[r][index] < arr[smallest][index])
-        smallest = r;
-    // If smallest is not root
-    if (smallest != i) {
-        std::swap(arr[i], arr[smallest]);
-        // Recursively heapify the affected sub-tree
-        heapify(arr, n, smallest, index);
-    }
+
+bool getGlobalAvailability(const Carrera *Options) {
+    return !(Options[0].Disponibilidad == false &&
+             Options[1].Disponibilidad == false &&
+             Options[2].Disponibilidad == false &&
+             Options[3].Disponibilidad == false &&
+             Options[4].Disponibilidad == false &&
+             Options[5].Disponibilidad == false &&
+             Options[6].Disponibilidad == false &&
+             Options[7].Disponibilidad == false &&
+             Options[8].Disponibilidad == false &&
+             Options[9].Disponibilidad == false &&
+             Options[10].Disponibilidad == false &&
+             Options[11].Disponibilidad == false &&
+             Options[12].Disponibilidad == false &&
+             Options[13].Disponibilidad == false &&
+             Options[14].Disponibilidad == false &&
+             Options[15].Disponibilidad == false &&
+             Options[16].Disponibilidad == false &&
+             Options[17].Disponibilidad == false &&
+             Options[18].Disponibilidad == false &&
+             Options[19].Disponibilidad == false &&
+             Options[20].Disponibilidad == false &&
+             Options[21].Disponibilidad == false &&
+             Options[22].Disponibilidad == false &&
+             Options[23].Disponibilidad == false &&
+             Options[24].Disponibilidad == false &&
+             Options[25].Disponibilidad == false &&
+             Options[26].Disponibilidad == false &&
+             Options[27].Disponibilidad == false);
 }
 
-void heapSort(int **arr, int n, int index) {
-    // Build heap (rearrange array)
-    for (int i = n / 2 - 1; i >= 0; i--)
-        heapify(arr, n, i, index);
-    // One by one extract an element from heap
-    for (int i = n - 1; i >= 0; i--) {
-        // Move current root to end
-        std::swap(arr[0], arr[i]);
-        // call max heapify on the reduced heap
-        heapify(arr, i, 0, index);
-    }
-}
+void store(const int *Postulants, Carrera *Options, const int Index) {
+    for (int i = 0; i < Options[Index].Vacantes; i++) {
+        if (Options[Index].Mechones[i][0] == 0) {
+            Options[Index].Mechones[i][0] = Postulants[0]; // <- rut
+            Options[Index].Mechones[i][1] = Postulants[6]; // <- ponderacion
 
-bool getGlobalAvailability(Carrera *opciones) {
-    return !(opciones[0].Disponibilidad == false &&
-             opciones[1].Disponibilidad == false &&
-             opciones[2].Disponibilidad == false &&
-             opciones[3].Disponibilidad == false &&
-             opciones[4].Disponibilidad == false &&
-             opciones[5].Disponibilidad == false &&
-             opciones[6].Disponibilidad == false &&
-             opciones[7].Disponibilidad == false &&
-             opciones[8].Disponibilidad == false &&
-             opciones[9].Disponibilidad == false &&
-             opciones[10].Disponibilidad == false &&
-             opciones[11].Disponibilidad == false &&
-             opciones[12].Disponibilidad == false &&
-             opciones[13].Disponibilidad == false &&
-             opciones[14].Disponibilidad == false &&
-             opciones[15].Disponibilidad == false &&
-             opciones[16].Disponibilidad == false &&
-             opciones[17].Disponibilidad == false &&
-             opciones[18].Disponibilidad == false &&
-             opciones[19].Disponibilidad == false &&
-             opciones[20].Disponibilidad == false &&
-             opciones[21].Disponibilidad == false &&
-             opciones[22].Disponibilidad == false &&
-             opciones[23].Disponibilidad == false &&
-             opciones[24].Disponibilidad == false &&
-             opciones[25].Disponibilidad == false &&
-             opciones[26].Disponibilidad == false &&
-             opciones[27].Disponibilidad == false);
-}
-
-void store(int *postulante, Carrera *opciones, int index) {
-    for (int i = 0; i < opciones[index].Vacantes; i++) {
-        if (opciones[index].Mechones[i][0] == 0) {
-            opciones[index].Mechones[i][0] = postulante[0]; // <- rut
-            opciones[index].Mechones[i][1] = postulante[6]; // <- ponderacion
-
-            if (i == opciones[index].Vacantes - 1) {
-                opciones[index].Disponibilidad = false;
-                heapSort(opciones[index].Mechones, opciones[index].Vacantes, 1);
+            if (i == Options[Index].Vacantes - 1) {
+                Options[Index].Disponibilidad = false;
+                heapSort(Options[Index].Mechones, Options[Index].Vacantes, 1);
             }
             break;
         }
     }
 }
 
-void postulate(OfertaUniversitaria U, int **ponderados, const int students) {
-    const int n = U.CantidadCarreras;
+void postulate(OfertaUniversitaria U, int **WeightedScores, const int StudentsCount) {
+    const int CareerCount = U.CantidadCarreras;
 
-    for (int i = 0; i < students; i++) {
+    for (int i = 0; i < StudentsCount; i++) {
         U.DisponibilidadCupos = getGlobalAvailability(U.Oferta);
 
         if (U.DisponibilidadCupos == true) {
-            int *postulante = ponderados[i];
+            int *Postulant = WeightedScores[i];
 
-            for (int j = 0; j < n; j++) {
-                if (postulante[7] == U.Oferta[j].Codigo) {
+            for (int j = 0; j < CareerCount; j++) {
+                if (Postulant[7] == U.Oferta[j].Codigo) {
                     if (U.Oferta[j].Disponibilidad == true) {
-                        store(postulante, U.Oferta, j);
+                        store(Postulant, U.Oferta, j);
                     } else {
-                        double mejor2 = 0;
-                        int posicion = 0;
+                        double SecondBestWeightedScore = 0;
+                        int Position = 0;
 
-                        for (int k = 0; k < n; k++) {
+                        for (int k = 0; k < CareerCount; k++) {
                             if (U.Oferta[k].Disponibilidad == true) {
-                                double ponderacion2 = weighScoresByCareer(postulante, U.Oferta[k]);
+                                double SecondWeighted = weighScoresByCareer(Postulant, U.Oferta[k]);
 
-                                if (ponderacion2 >= mejor2) {
-                                    posicion = k;
-                                    mejor2 = ponderacion2;
+                                if (SecondWeighted >= SecondBestWeightedScore) {
+                                    Position = k;
+                                    SecondBestWeightedScore = SecondWeighted;
                                 }
                             }
                         }
 
-                        postulante[6] = static_cast<int>(round(mejor2));
-                        store(postulante, U.Oferta, posicion);
+                        Postulant[6] = static_cast<int>(round(SecondBestWeightedScore));
+                        store(Postulant, U.Oferta, Position);
                     }
                 }
             }
-        } else {
-            break;
-        }
+        } else break;
     }
 }
 
-void write(OfertaUniversitaria U, std::string ruta) {
-    std::ofstream escritura;
+void write(OfertaUniversitaria U, const std::string &Path) {
+    std::ofstream OutputStream;
 
     for (int i = 0; i < U.CantidadCarreras; i++) {
-        std::string archivo = std::to_string(U.Oferta[i].Codigo);
+        std::string CareerCode = std::to_string(U.Oferta[i].Codigo);
 
-        escritura.open(ruta + "/" + archivo + ".txt");
+        OutputStream.open((Path + "/").append(CareerCode) + ".txt");
 
-        if (escritura.is_open()) {
+        if (OutputStream.is_open()) {
             for (int j = 0; j < U.Oferta[i].Vacantes; j++) {
-                std::string salida = std::to_string(U.Oferta[i].Mechones[j][0]) + ";" + std::to_string(
-                                         U.Oferta[i].Mechones[j][1]);
-                escritura << salida << std::endl;
+                OutputStream << std::to_string(U.Oferta[i].Mechones[j][0]) + ";" +
+                        std::to_string(U.Oferta[i].Mechones[j][1]) << std::endl;
             }
 
-            escritura.close();
+            OutputStream.close();
         }
     }
 }
 
-std::string search(std::string ruta, std::string rut) {
-    std::ifstream lectura;
+std::string search(const std::string& Path, const std::string& Rut) {
+    std::ifstream InputStream;
 
-    std::string busqueda = "\nNo se ha encontrado el estudiante del rut ingresado.";
+    std::string SearchMessage = "\nNo se ha encontrado el estudiante del rut ingresado.";
 
-    bool existen = false;
+    bool ResultExists = false;
 
-    const char *files[28] = {
+    const char *FileNames[28] = {
         "21073.txt", "21049.txt", "21041.txt", "21047.txt", "21089.txt", "21043.txt", "21030.txt",
         "21096.txt", "21046.txt", "21076.txt", "21075.txt", "21048.txt", "21071.txt", "21031.txt",
         "21032.txt", "21045.txt", "21074.txt", "21083.txt", "21039.txt", "21087.txt", "21015.txt",
         "21081.txt", "21002.txt", "21012.txt", "21080.txt", "21082.txt", "21024.txt", "21023.txt"
     };
 
-    int n = sizeof(files) / sizeof(files[0]);
+    // const int FilesCount = sizeof(FileNames) / sizeof(FileNames[0]);
 
-    for (int i = 0; i < n; i++) {
-        lectura.open(ruta + "/" + files[i]);
+    for (auto & FileName : FileNames) {
+        InputStream.open(Path + "/" + FileName);
 
-        if (lectura.is_open()) {
-            if (existen == false) {
-                existen = true;
+        if (InputStream.is_open()) {
+            if (ResultExists == false) {
+                ResultExists = true;
             }
 
             int j = 0;
 
-            for (std::string linea; std::getline(lectura, linea); j++) {
+            for (std::string Line; std::getline(InputStream, Line); j++) {
                 int k = 0;
                 std::string aux[2], item;
-                std::stringstream ss(linea);
+                std::stringstream ss(Line);
 
                 while (getline(ss, item, ';')) {
                     aux[k] = item.c_str();
                     k++;
                 }
 
-                if (rut == aux[0]) {
-                    busqueda = "\nEstudiante encontrado en la linea " + std::to_string(j + 1) + " del archivo " +
-                               files[i];
+                if (Rut == aux[0]) {
+                    SearchMessage = "\nEstudiante encontrado en la linea " + std::to_string(j + 1) + " del archivo " +
+                               FileName;
 
-                    lectura.close();
+                    InputStream.close();
 
                     break;
                 }
             }
         }
 
-        lectura.close();
+        InputStream.close();
     }
 
-    if (existen == false) {
-        busqueda = "\nNo se ha encontrado ningun archivo en la ruta especificada.";
+    if (ResultExists == false) {
+        SearchMessage = "\nNo se ha encontrado ningun archivo en la ruta especificada.";
     }
 
-    return busqueda;
+    return SearchMessage;
 }

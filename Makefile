@@ -61,8 +61,11 @@ dirs:
 main.o: main.cpp
 	${CXX} ${CXXFLAGS} -c main.cpp -o build/main.o
 	
-funciones.o: funciones.cpp funciones.h
+funciones.o: funciones.cpp heapSort.o include.h
 	${CXX} ${CXXFLAGS} -c funciones.cpp -o build/funciones.o
+
+heapSort.o: heapSort.cpp
+	${CXX} ${CXXFLAGS} -c heapSort.cpp -o build/heapSort.o
 
 # build
 build: .build-post
